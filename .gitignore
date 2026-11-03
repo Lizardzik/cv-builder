@@ -1,0 +1,30 @@
+# Klucze API i zmienne środowiskowe (NAJWAŻNIEJSZE!)
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+
+# Zależności i paczki npm
+node_modules/
+server/node_modules/
+
+# Zbudowane wersje aplikacji (dist/build)
+dist/
+build/
+server/dist/
+
+# Ustawienia środowiska uruchomieniowego i edytora
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+
+# Pliki tymczasowe i lokalne skrypty Windows
+*.tmp
+Uruchom-CV-Builder.bat
+Uruchom.vbs
+
+# Systemowe pliki ukryte
+.DS_Store
+Thumbs.db
