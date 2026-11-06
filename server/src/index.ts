@@ -188,13 +188,13 @@ Przeanalizuj poniższy tekst i wyodrębnij WSZYSTKIE dostępne informacje do sch
 
 Ścisłe reguły formatowania:
 1. personalInfo: Wyodrębnij imię, nazwisko, stanowisko (jobTitle), email, telefon (sam numer), miasto, kod pocztowy, linki (linkedin, github, portfolio).
-2. experience: Każde stanowisko jako osobny element z: company, position, startDate (format MM.RRRR), endDate (format MM.RRRR lub słowo 'Obecnie'), description (sformatowane jako lista HTML <ul><li>...</li></ul>).
-3. projects: Projekty programistyczne lub własne realizacje z: name, role, technologies, url, description.
+2. experience: Każde stanowisko jako osobny element z: company, position, startDate (format MM.RRRR), endDate (format MM.RRRR lub słowo 'Obecnie').
+3. projects: Projekty z: name, role, technologies, url, description.
 4. education: Wszystkie szkoły i uczelnie z: school, degree, startDate (MM.RRRR), endDate (MM.RRRR lub 'Obecnie').
-5. skills: Wyodrębnij wyłącznie technologie, języki programowania, narzędzia lub kompetencje zawodowe. NIE umieszczaj tutaj nazw stanowisk ani firm.
+5. skills: Wyodrębnij wyłącznie umiejętności techniczne, narzędzia lub kompetencje zawodowe. NIE umieszczaj tutaj nazw stanowisk ani firm.
 6. languages: Dla każdego języka określ poziom w formacie: 'A1', 'A2', 'B1', 'B2', 'C1', 'C2' lub 'Ojczysty'.
-7. courses: Wszystkie kursy, certyfikaty i szkolenia.
-8. summary: Jeśli w CV znajduje się podsumowanie zawodowe lub sekcja 'O mnie', przepisz ją.
+7. courses: Wszystkie kursy i certyfikaty.
+8. summary: Przepisz sekcję podsumowania zawodowego, jeśli występuje.
 
 Treść dokumentu CV:
 ${extractedText}`,
@@ -245,29 +245,21 @@ app.post("/api/suggest-skills", aiLimiter, async (req, res) => {
   log(reqId, ">>> nowy request /api/suggest-skills");
 
   try {
-    const { experience = [], projects = [], education = [], currentSkills = [] } = req.body;
-
-    const hasData =
-      (Array.isArray(experience) && experience.some((e: any) => e.company || e.position || e.description)) ||
-      (Array.isArray(projects) && projects.some((p: any) => p.name || p.technologies || p.description)) ||
-      (Array.isArray(education) && education.some((e: any) => e.school || e.degree));
-
-    if (!hasData) {
-      return res.status(400).json({
-        error: "Uzupełnij najpierw opisy w doświadczeniu, projektach lub edukacji.",
-      });
-    }
+    const {
+      experience = [],
+      projects = [],
+      education = [],
+      currentSkills = [],
+      targetRole = "",
+      language = "pl",
+    } = req.body;
 
     const expText = experience
-      .map((e: any) => `- Stanowisko: ${e.position} | Firma: ${e.company}\n  Opis obowiązków i użytych technologii:\n  ${e.description || "Brak opisu"}`)
-      .join("\n\n");
+      .map((e: any) => `- Stanowisko: ${e.position} | Firma: ${e.company}`)
+      .join("\n");
 
     const projText = projects
-      .map((p: any) => `- Projekt: ${p.name} | Stack: ${p.technologies}\n  Opis realizacji:\n  ${p.description || "Brak opisu"}`)
-      .join("\n\n");
-
-    const eduText = education
-      .map((e: any) => `- ${e.school}, ${e.degree}`)
+      .map((p: any) => `- Projekt: ${p.name} | Stack: ${p.technologies}\n  Opis: ${p.description || "Brak"}`)
       .join("\n");
 
     const currentSkillsList = currentSkills
@@ -275,17 +267,19 @@ app.post("/api/suggest-skills", aiLimiter, async (req, res) => {
       .filter(Boolean)
       .join(", ");
 
+    const isEnglish = language === "en";
+
     const contextText = `
---- DOŚWIADCZENIE ZAWODOWE (ANALIZUJ DOKŁADNIE TREŚĆ OPISÓW) ---
-${expText}
+Stanowisko docelowe: ${targetRole || "Doradca Klienta / IT Specjalista"}
+Język dokumentu: ${isEnglish ? "Angielski (English)" : "Polski"}
 
---- PROJEKTY (ANALIZUJ DOKŁADNIE TREŚĆ OPISÓW I STACK) ---
-${projText}
+--- DOŚWIADCZENIE ---
+${expText || "Brak"}
 
---- EDUKACJA ---
-${eduText}
+--- PROJEKTY ---
+${projText || "Brak"}
 
---- OBECNIE DODANE UMIEJĘTNOŚCI (NIE REPETUJ ICH) ---
+--- OBECNIE DODANE UMIEJĘTNOŚCI ---
 ${currentSkillsList || "Brak"}
     `.trim();
 
@@ -297,14 +291,17 @@ ${currentSkillsList || "Brak"}
             role: "user",
             parts: [
               {
-                text: `Jesteś analitykiem technicznym CV. Przeanalizuj SZCZEGÓŁOWO podane opisy obowiązków, zrealizowane zadania i technologie z sekcji Doświadczenie oraz Projekty.
+                text: `Jesteś ekspertem ds. rekrutacji. Wygeneruj zestaw 8-10 umiejętności do CV w języku: ${isEnglish ? "ANGIELSKIM" : "POLSKIM"}.
 
-Zadanie:
-Wyciągnij i zasugeruj 6-12 konkretnych, rynkowych umiejętności (np. nazwy frameworków, bibliotek, baz danych, wzorców projektowych, metodologii lub narzędzi), które bezpośrednio wynikają z treści opisów kandydata, a nie zostały jeszcze dodane do jego listy.
-
-Wymagania:
-- Skup się na twardych umiejętnościach wynikających z opisów działań i osiągnięć kandydata.
-- Zwróć wyłącznie tablicę JSON ze stringami.
+Zasady (ŚCIŚLE PRZESTRZEGAJ):
+1. SPÓJNOŚĆ JĘZYKOWA: Nie mieszaj języków w umiejętnościach miękkich i obsługowych.
+   - Jeśli język to POLSKI: używaj polskich pojęć (np. "Obsługa klienta", "Rozliczanie transakcji finansowych", "Komunikacja z klientem", "Praca w zespole").
+   - Jeśli język to ANGIELSKI: wszystkie pojęcia po angielsku (np. "Customer Service", "Financial Transaction Processing", "Teamwork").
+2. Układ umiejętności:
+   - Część 1: Umiejętności praktyczne, komercyjne i operacyjne (np. Obsługa klienta, Obsługa kasy fiskalnej, Rozliczanie transakcji, MS Office, Terminale płatnicze).
+   - Część 2: Umiejętności zyskiwane z technologii (np. Rozwiązywanie problemów, Konfiguracja sprzętu PC, Narzędzia AI).
+3. Pomijaj duplikaty znajdujące się już na liście: ${currentSkillsList}
+4. Zwróć wyłącznie tablicę JSON ze stringami.
 
 Dane do analizy:
 ${contextText}`,
@@ -341,14 +338,16 @@ app.post("/api/generate-summary", aiLimiter, async (req, res) => {
   try {
     const { personalInfo, experience = [], projects = [], education = [], skills = [] } = req.body;
 
+    const targetRole = personalInfo?.jobTitle || "Doradca Klienta";
     const contextText = `
-Stanowisko docelowe: ${personalInfo?.jobTitle || "Nie podano"}
-Doświadczenie:
-${experience.map((e: any) => `- ${e.position} w ${e.company}: ${e.description}`).join("\n")}
-Projekty:
-${projects.map((p: any) => `- ${p.name} (${p.technologies}): ${p.description}`).join("\n")}
+Stanowisko docelowe, na które aplikuję: ${targetRole}
+
+Doświadczenie zawodowe (bez szczegółowych opisów):
+${experience.map((e: any) => `- ${e.position} w ${e.company}`).join("\n")}
+
 Edukacja:
-${education.map((e: any) => `- ${e.degree} na ${e.school}`).join("\n")}
+${education.map((e: any) => `- ${e.school} (${e.degree || ""})`).join("\n")}
+
 Umiejętności:
 ${skills.map((s: any) => s.name).filter(Boolean).join(", ")}
     `.trim();
@@ -361,7 +360,24 @@ ${skills.map((s: any) => s.name).filter(Boolean).join(", ")}
             role: "user",
             parts: [
               {
-                text: `Napisz naturalne, konkretne podsumowanie zawodowe (3-4 zdania, w 1. osobie po polsku) na podstawie poniższych danych. Zwróć sam tekst bez cudzysłowów.\n\nDane:\n${contextText}`,
+                text: `Napisz profesjonalne podsumowanie zawodowe w 1. osobie po polsku (3-4 zdania).
+
+BARDZO WAŻNA ZASADA PRAWDOMÓWNOŚCI:
+Kandydat NIE pracuje i NIE pracował jeszcze jako "${targetRole}". Posiada doświadczenie w pracy handlowej/kasjera (kontakt z ludźmi) oraz zaplecze edukacyjne/techniczne (React, C#, systemy IT, narzędzia AI).
+NIE pisz np. "Jestem doradcą klienta z doświadczeniem...". 
+Zamiast tego napisz np. "Praktyk w obszarze bezpośredniej obsługi klienta z zapleczem technologicznym..." lub "Osoba z doświadczeniem w obsłudze konsumentów oraz silnym zapleczem w zakresie nowych technologii...".
+
+Struktura podsumowania:
+1. Zdanie 1: Kim jestem (praktyk obsługi / osoba z doświadczeniem handlowym i zapleczem technicznym).
+2. Zdanie 2: Jakie technologie, narzędzia (np. AI/LLM, MS Office) lub umiejętności wykorzystuję w codziennej pracy i rozwiązywaniu problemów.
+3. Zdanie 3-4: Czego szukam w nowej pracy – wyraźna chęć rozwoju na stanowisku "${targetRole}", łącząca bezpośredni kontakt z klientem z doradztwem technicznym i wdrażaniem rozwiązań cyfrowych.
+
+Zasady:
+- Pisz konkretnie, naturalnie, bez sztucznych przymiotników typu "ambitny", "kluczowy".
+- Zwróć sam czysty tekst bez cudzysłowów i znaczników markdown.
+
+Dane:
+${contextText}`,
               },
             ],
           },
@@ -398,12 +414,14 @@ app.post("/api/match-job", aiLimiter, async (req, res) => {
     }
 
     const candidateContext = JSON.stringify({
-      jobTitle: cvData?.personalInfo?.jobTitle,
+      targetJobTitle: cvData?.personalInfo?.jobTitle,
       summary: cvData?.summary,
       skills: (cvData?.skills || []).map((s: any) => s.name),
-      experience: cvData?.experience || [],
-      projects: cvData?.projects || [],
-      education: cvData?.education || [],
+      experience: (cvData?.experience || []).map((e: any) => ({ position: e.position, company: e.company })),
+      projects: (cvData?.projects || []).map((p: any) => ({ name: p.name, technologies: p.technologies })),
+      education: (cvData?.education || []).map((ed: any) => ({ school: ed.school, degree: ed.degree })),
+      courses: (cvData?.courses || []).map((c: any) => c.name),
+      interests: (cvData?.interests || []).map((i: any) => i.name),
     });
 
     const response = await generateWithModelFallback(
@@ -414,16 +432,16 @@ app.post("/api/match-job", aiLimiter, async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `Jesteś technicznym rekruterem IT i ekspertem systemów ATS. Porównaj profil kandydata z treścią ogłoszenia o pracę.
+                text: `Jesteś ekspertem rekrutacji i systemów ATS. Porównaj profil kandydata z treścią ogłoszenia o pracę.
 
 Zadania:
 1. companyName: Wyciągnij nazwę firmy z ogłoszenia (jeśli brak, wpisz "Firma").
 2. targetJobTitle: Wyciągnij dokładną nazwę stanowiska z ogłoszenia.
 3. matchScore: Oceń dopasowanie w skali 0-100.
-4. matchingSkills: Wymień umiejętności z ogłoszenia, które kandydat już posiada w CV lub projektach.
-5. missingSkills: Wymień konkretne technologie, narzędzia i słowa kluczowe z ogłoszenia, których brakuje w CV kandydata (maksymalnie 8 najważniejszych).
-6. tailoredSummary: Napisz nowe, naturalne podsumowanie zawodowe (3-4 zdania, w 1. osobie po polsku), łączące prawdziwe doświadczenie i projekty kandydata z wymaganiami tego ogłoszenia. Nie zmyślaj faktów.
-7. actionableAdvice: Podaj 3 krótkie, konkretne wskazówki, co kandydat powinien podkreślić w opisie swoich projektów lub doświadczenia pod tę ofertę.
+4. matchingSkills: Wymień umiejętności z ogłoszenia, które kandydat posiada w CV (np. obsługa klienta, znajomość MS Office, rozwiązywanie problemów).
+5. missingSkills: Wymień słowa kluczowe z ogłoszenia, których brakuje w CV kandydata (maks. 8).
+6. tailoredSummary: Napisz nowe podsumowanie zawodowe (3-4 zdania, w 1. osobie po polsku). Łącz w nim realne doświadczenie handlowe kandydata oraz jego zaplecze techniczne z wymaganiami tej konkretnej oferty. PAMIĘTAJ: Nie pisz, że kandydat pracował już na tym stanowisku docelowym – napisz, że posiada doświadczenie w obsłudze i chce je rozwijać na tym stanowisku.
+7. actionableAdvice: Podaj 3 zwięzłe, konkretne rady pod tę ofertę.
 
 Profil kandydata:
 ${candidateContext}
@@ -456,6 +474,61 @@ ${jobDescription.slice(0, 10000)}`,
   }
 });
 
+app.post("/api/parse-readme", aiLimiter, async (req, res) => {
+  const reqId = newRequestId();
+  const requestStart = Date.now();
+  log(reqId, ">>> nowy request /api/parse-readme");
+
+  try {
+    const { readmeText } = req.body;
+
+    if (!readmeText || typeof readmeText !== "string" || readmeText.trim().length < 10) {
+      return res.status(400).json({
+        error: "Wklej najpierw treść pliku README lub opis projektu.",
+      });
+    }
+
+    const response = await generateWithModelFallback(
+      (modelName) => ({
+        model: modelName,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Jesteś ekspertem rekrutacji. Przeanalizuj treść z README i przekształć ją na BARDZO ZWIĘZŁY wpis do CV.
+
+Zasady:
+1. name: Krótka nazwa rynkowa (np. "Fullstack AI CV Builder").
+2. technologies: 5-7 najważniejszych technologii po przecinku.
+3. description: Dokładnie 2-3 krótkie podpunkty HTML (<ul><li>...</li></ul>). Każdy punkt to zwięzłe zdanie skupione na rozwiązaniu technicznym.
+
+Treść README:
+${readmeText.slice(0, 8000)}`,
+              },
+            ],
+          },
+        ],
+        config: {
+          responseMimeType: "application/json",
+        },
+      }),
+      reqId
+    );
+
+    if (!response.text) {
+      throw new Error("Model zwrócił pustą odpowiedź.");
+    }
+
+    const result = JSON.parse(response.text);
+    log(reqId, `<<< SUKCES /api/parse-readme (${Date.now() - requestStart}ms)`);
+    res.json(result);
+  } catch (error: any) {
+    log(reqId, `<<< BŁĄD /api/parse-readme: ${error.message}`);
+    handleAiError(res, error, "Nie udało się przeanalizować opisu projektu.");
+  }
+});
+
 app.post("/api/enhance-description", aiLimiter, async (req, res) => {
   const reqId = newRequestId();
   const requestStart = Date.now();
@@ -478,15 +551,14 @@ app.post("/api/enhance-description", aiLimiter, async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `Przekształć poniższe robocze notatki kandydata w profesjonalne, konkretne punkty do CV (od 2 do 4 podpunktów).
+                text: `Przekształć poniższe robocze notatki w profesjonalne podpunkty do CV (od 2 do 4 podpunktów HTML).
 Kontekst pozycji: ${contextTitle} ${contextSubtitle ? `(${contextSubtitle})` : ""}
 
 Zasady:
-- Używaj rzeczowników odczasownikowych lub czasowników dokonanych (np. "Zaprojektowanie i wdrożenie...", "Optymalizacja...", "Obsługa...").
-- Skup się na konkretach, technologiach i praktycznym rezultacie bez sztucznych przymiotników.
-- Zwróć WYŁĄCZNIE czystą listę HTML w formacie <ul><li>Punkt 1</li><li>Punkt 2</li></ul> bez znaczników markdown i bez dodatkowego tekstu.
+- Skup się na konkretach i rezultatach.
+- Zwróć WYŁĄCZNIE czystą listę HTML w formacie <ul><li>Punkt 1</li><li>Punkt 2</li></ul>.
 
-Notatki kandydata:
+Notatki:
 ${text}`,
               },
             ],
@@ -512,6 +584,7 @@ ${text}`,
     handleAiError(res, error, "Nie udało się ulepszyć opisu.");
   }
 });
+
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const frontendDistPath = path.resolve(currentDir, "../../dist");
 
@@ -521,7 +594,6 @@ app.get(/(.*)/, (req, res, next) => {
   if (req.path.startsWith("/api")) return next();
   res.sendFile(path.join(frontendDistPath, "index.html"));
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

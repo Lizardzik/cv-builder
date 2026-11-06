@@ -11,12 +11,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RichTextEditor } from "@/components/RichTextEditor";
 import { DateRangeFields } from "./DateRangeFields";
 import { SortableItemHeader } from "./SortableItemHeader";
 
 export function ExperienceForm() {
-  const { control, watch } = useFormContext<CVData>();
+  const { control } = useFormContext<CVData>();
   const { fields, append, remove, move } = useFieldArray({
     control,
     name: "experience",
@@ -28,11 +27,11 @@ export function ExperienceForm() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-semibold mb-1 text-zinc-900 dark:text-zinc-50">
-            Doświadczenie zawodowe
+            Doświadczenie
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-            Dodaj stanowiska i opisz zakres swoich obowiązków lub ulepsz punkty
-            z AI.
+            Zwięzła lista zajmowanych stanowisk bez zbędnego rozpisywania
+            obowiązków.
           </p>
         </div>
         <Button
@@ -44,7 +43,6 @@ export function ExperienceForm() {
               position: "",
               startDate: "",
               endDate: "",
-              description: "",
             })
           }
           className="self-start sm:self-auto"
@@ -94,12 +92,15 @@ export function ExperienceForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={control}
-                  name={`experience.${index}.company`}
+                  name={`experience.${index}.position`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Firma</FormLabel>
+                      <FormLabel>Stanowisko / Typ pracy</FormLabel>
                       <FormControl>
-                        <Input placeholder="Np. Tech Corp" {...field} />
+                        <Input
+                          placeholder="Np. Junior Developer / Freelancer"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -108,13 +109,13 @@ export function ExperienceForm() {
 
                 <FormField
                   control={control}
-                  name={`experience.${index}.position`}
+                  name={`experience.${index}.company`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stanowisko</FormLabel>
+                      <FormLabel>Firma / Miejsce</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Np. Junior .NET Developer"
+                          placeholder="Np. Tech Corp / Samodzielnie"
                           {...field}
                         />
                       </FormControl>
@@ -126,29 +127,10 @@ export function ExperienceForm() {
                 <DateRangeFields
                   startName={`experience.${index}.startDate`}
                   endName={`experience.${index}.endDate`}
-                  currentLabel="Pracuję aktualnie"
+                  currentLabel="Aktualnie"
                   currentCheckboxId={`exp-current-${field.id}`}
                 />
               </div>
-
-              <FormField
-                control={control}
-                name={`experience.${index}.description`}
-                render={({ field }) => (
-                  <FormItem className="pt-2">
-                    <FormLabel>Opis obowiązków i osiągnięć</FormLabel>
-                    <FormControl>
-                      <RichTextEditor
-                        value={field.value || ""}
-                        onChange={field.onChange}
-                        contextTitle={watch(`experience.${index}.position`)}
-                        contextSubtitle={watch(`experience.${index}.company`)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
           </div>
         ))}

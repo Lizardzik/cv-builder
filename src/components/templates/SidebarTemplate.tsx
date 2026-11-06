@@ -1,212 +1,341 @@
-import { type TemplateProps, stripProtocol, toHref } from "./types";
-import { RichText } from "@/components/RichText";
-import { ProjectsSection } from "./ProjectsSection";
+import type { CVData } from "@/types/cv";
+
+interface SidebarTemplateProps {
+  data: CVData;
+  primaryColor?: string;
+  textColor?: string;
+  backgroundColor?: string;
+  fontSize?: number;
+  spacing?: number;
+}
 
 export function SidebarTemplate({
   data,
-  dimensions,
-  colors,
-  validLinks,
-}: TemplateProps) {
-  const { h3Size, subText, tinyText, sectionGap, itemGap, age } = dimensions;
-  const { accent } = colors;
-  const photo = data.personalInfo?.photo;
+  primaryColor = "#047857",
+  textColor = "#18181b",
+  backgroundColor = "#ffffff",
+  fontSize = 13,
+  spacing = 16,
+}: SidebarTemplateProps) {
+  const {
+    personalInfo,
+    summary,
+    experience,
+    projects,
+    education,
+    skills,
+    languages,
+    courses,
+    interests,
+  } = data;
+
+  const sectionGap = `${spacing}px`;
+  const itemGap = `${Math.max(Math.round(spacing * 0.5), 4)}px`;
 
   return (
-    <div className="flex h-full">
+    <div
+      className="w-full flex min-h-[1123px] leading-relaxed shadow-lg"
+      style={{ backgroundColor, fontSize: `${fontSize}px` }}
+    >
+      {/* LEWY PANEL (SIDEBAR) */}
       <div
-        className="w-[32%] p-8 text-white flex flex-col justify-between shrink-0 shadow-lg"
-        style={{ backgroundColor: accent }}
+        className="w-[32%] p-6 text-white flex flex-col justify-between shrink-0"
+        style={{ backgroundColor: primaryColor }}
       >
-        <div className="flex flex-col gap-6">
-          {photo && (
-            <div className="flex flex-col items-center">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-md">
+        <div className="space-y-5">
+          {personalInfo?.photo && (
+            <div className="flex justify-center mb-2">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white/20 shadow-md">
                 <img
-                  src={photo}
+                  src={personalInfo.photo}
                   alt="Profil"
                   className="w-full h-full object-cover"
                 />
               </div>
-              {age !== null && (
-                <span
-                  className="mt-2 text-white/80 font-medium"
-                  style={{ fontSize: `${tinyText}px` }}
-                >
-                  {age} lat
-                </span>
-              )}
             </div>
           )}
 
-          <div>
-            <h2
-              className="font-bold leading-tight text-white"
-              style={{ fontSize: `${h3Size + 4}px` }}
+          <div className="space-y-1">
+            <h1
+              className="font-bold tracking-tight leading-tight"
+              style={{ fontSize: `${fontSize * 1.5}px` }}
             >
-              {data.personalInfo?.firstName} <br />
-              {data.personalInfo?.lastName}
-            </h2>
-            <p
-              className="font-medium text-white/80 mt-1 leading-snug"
-              style={{ fontSize: `${subText}px` }}
-            >
-              {data.personalInfo?.jobTitle}
-            </p>
+              {personalInfo?.firstName} {personalInfo?.lastName}
+            </h1>
+            {personalInfo?.jobTitle && (
+              <p
+                className="text-white/80 font-medium"
+                style={{ fontSize: `${fontSize * 0.9}px` }}
+              >
+                {personalInfo.jobTitle}
+              </p>
+            )}
           </div>
 
-          <div
-            className="flex flex-col gap-1.5 border-t border-white/20 pt-4 text-white/90"
-            style={{ fontSize: `${subText}px` }}
-          >
-            <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5">
+          {/* KONTAKT I LINKI */}
+          <div className="space-y-2 border-t border-white/20 pt-3">
+            <h2
+              className="font-bold uppercase tracking-wider text-white/70 mb-2"
+              style={{ fontSize: `${fontSize * 0.75}px` }}
+            >
               Kontakt
-            </span>
-            {data.personalInfo?.email && (
-              <a
-                href={`mailto:${data.personalInfo.email}`}
-                className="break-all hover:underline"
+            </h2>
+            {personalInfo?.email && (
+              <div
+                className="break-all text-white/90"
+                style={{ fontSize: `${fontSize * 0.85}px` }}
               >
-                {data.personalInfo.email}
-              </a>
+                {personalInfo.email}
+              </div>
             )}
-            {data.personalInfo?.phone && <div>{data.personalInfo.phone}</div>}
-            {data.personalInfo?.city && <div>{data.personalInfo.city}</div>}
-            {data.personalInfo?.github && (
-              <a
-                href={toHref(data.personalInfo.github)}
-                target="_blank"
-                rel="noreferrer"
-                className="break-all text-white/85 hover:underline"
+            {personalInfo?.phone && (
+              <div
+                className="text-white/90"
+                style={{ fontSize: `${fontSize * 0.85}px` }}
               >
-                {stripProtocol(data.personalInfo.github)}
-              </a>
+                +48 {personalInfo.phone}
+              </div>
             )}
-            {data.personalInfo?.linkedin && (
-              <a
-                href={toHref(data.personalInfo.linkedin)}
-                target="_blank"
-                rel="noreferrer"
-                className="break-all text-white/85 hover:underline"
+            {personalInfo?.city && (
+              <div
+                className="text-white/90"
+                style={{ fontSize: `${fontSize * 0.85}px` }}
               >
-                {stripProtocol(data.personalInfo.linkedin)}
-              </a>
+                {personalInfo.city}
+              </div>
             )}
-            {validLinks.length > 0 && (
-              <div className="flex flex-col gap-1 mt-1 border-t border-white/10 pt-2">
-                {validLinks.map((link, idx) => (
-                  <div key={idx} className="break-all text-xs text-white/85">
-                    {link.label && (
-                      <span className="text-white font-medium">
-                        {link.label}:{" "}
-                      </span>
-                    )}
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline decoration-white/30"
+
+            {/* Linia oddzielająca dane od linków */}
+            {personalInfo?.customLinks &&
+              personalInfo.customLinks.length > 0 && (
+                <div className="border-t border-white/15 pt-2.5 mt-2.5 space-y-2">
+                  {personalInfo.customLinks.map((link, i) => (
+                    <div
+                      key={i}
+                      className="space-y-0.5"
+                      style={{ fontSize: `${fontSize * 0.85}px` }}
                     >
-                      {link.cleanUrl}
-                    </a>
-                  </div>
+                      <div className="font-semibold text-white/90 leading-tight">
+                        {link.label}:
+                      </div>
+                      <a
+                        href={
+                          link.url.startsWith("http")
+                            ? link.url
+                            : `https://${link.url}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block underline text-white/80 hover:text-white break-all leading-tight"
+                      >
+                        {link.url.replace(/^https?:\/\//, "")}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+
+          {skills && skills.length > 0 && (
+            <div className="border-t border-white/20 pt-3">
+              <h2
+                className="font-bold uppercase tracking-wider text-white/70 mb-2.5"
+                style={{ fontSize: `${fontSize * 0.75}px` }}
+              >
+                Umiejętności
+              </h2>
+              <div className="flex flex-wrap gap-1.5">
+                {skills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="bg-white/15 px-2 py-0.5 rounded font-medium text-white break-words"
+                    style={{ fontSize: `${fontSize * 0.8}px` }}
+                  >
+                    {skill.name}
+                  </span>
                 ))}
               </div>
-            )}
-          </div>
-
-          {data.skills && data.skills.length > 0 && (
-            <div className="border-t border-white/20 pt-4">
-              <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-2 block">
-                Umiejętności
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {data.skills.map((skill, index) =>
-                  skill.name ? (
-                    <span
-                      key={index}
-                      className="px-2 py-0.5 rounded bg-white/15 text-white text-xs font-medium"
-                    >
-                      {skill.name}
-                    </span>
-                  ) : null,
-                )}
-              </div>
             </div>
           )}
 
-          {data.languages && data.languages.length > 0 && (
-            <div className="border-t border-white/20 pt-4">
-              <span className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-2 block">
+          {languages && languages.length > 0 && (
+            <div className="border-t border-white/20 pt-3">
+              <h2
+                className="font-bold uppercase tracking-wider text-white/70 mb-2"
+                style={{ fontSize: `${fontSize * 0.75}px` }}
+              >
                 Języki
-              </span>
-              <div className="flex flex-col gap-1.5">
-                {data.languages.map((lang, index) =>
-                  lang.name ? (
-                    <div
-                      key={index}
-                      className="flex justify-between items-center text-xs"
-                    >
-                      <span className="text-white/90">{lang.name}</span>
-                      <span className="font-bold text-white/80">
-                        {lang.level}
-                      </span>
-                    </div>
-                  ) : null,
-                )}
+              </h2>
+              <div className="space-y-1">
+                {languages.map((lang, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between"
+                    style={{ fontSize: `${fontSize * 0.85}px` }}
+                  >
+                    <span className="font-medium text-white">{lang.name}</span>
+                    <span className="text-white/70">{lang.level}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="w-[68%] p-8 flex flex-col justify-between">
-        <div className="flex flex-col" style={{ gap: `${sectionGap}px` }}>
-          {data.summary && (
-            <div>
-              <h3
-                className="font-bold uppercase tracking-wider mb-2"
-                style={{ color: accent, fontSize: `${h3Size}px` }}
+      {/* PRAWY PANEL (GŁÓWNA TREŚĆ) */}
+      <div
+        className="w-[68%] p-6 flex flex-col justify-between"
+        style={{ color: textColor }}
+      >
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: sectionGap }}
+        >
+          {summary && (
+            <div className="space-y-1.5">
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
               >
                 Profil zawodowy
-              </h3>
-              <p className="leading-relaxed whitespace-pre-wrap opacity-90">
-                {data.summary}
+              </h2>
+              <p
+                className="leading-relaxed opacity-90"
+                style={{ fontSize: `${fontSize * 0.9}px` }}
+              >
+                {summary}
               </p>
             </div>
           )}
 
-          {data.experience && data.experience.length > 0 && (
+          {experience && experience.length > 0 && (
             <div>
-              <h3
-                className="font-bold uppercase tracking-wider mb-3 pb-1 border-b border-current/15"
-                style={{ color: accent, fontSize: `${h3Size}px` }}
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1 mb-2"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
               >
-                Doświadczenie zawodowe
-              </h3>
-              <div className="flex flex-col" style={{ gap: `${itemGap}px` }}>
-                {data.experience.map((exp, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between items-start font-bold leading-tight">
-                      <span>{exp.position}</span>
-                      <span
-                        className="font-semibold whitespace-nowrap tabular-nums"
-                        style={{ color: accent, fontSize: `${subText}px` }}
+                Doświadczenie
+              </h2>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: itemGap,
+                }}
+              >
+                {experience.map((exp, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-start gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="font-bold leading-snug"
+                        style={{ fontSize: `${fontSize * 0.9}px` }}
                       >
-                        {exp.startDate} {exp.endDate ? ` — ${exp.endDate}` : ""}
-                      </span>
+                        {exp.position}
+                      </div>
+                      {exp.company && (
+                        <div
+                          className="opacity-75"
+                          style={{ fontSize: `${fontSize * 0.82}px` }}
+                        >
+                          {exp.company}
+                        </div>
+                      )}
                     </div>
                     <div
-                      className="opacity-70 mt-0.5"
-                      style={{ fontSize: `${subText}px` }}
+                      className="opacity-60 font-medium shrink-0 text-right whitespace-nowrap"
+                      style={{ fontSize: `${fontSize * 0.82}px` }}
                     >
-                      {exp.company}
+                      {exp.startDate}{" "}
+                      {exp.startDate && (exp.endDate || "Obecnie") ? "—" : ""}{" "}
+                      {exp.endDate || (exp.startDate ? "Obecnie" : "")}
                     </div>
-                    {exp.description && (
-                      <RichText
-                        html={exp.description}
-                        className="leading-relaxed mt-1 opacity-80"
-                        style={{ fontSize: `${subText}px` }}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SEKCYJNE WSPARCIE DLA PROJEKTÓW (JEŚLI SĄ) */}
+          {projects && projects.length > 0 && (
+            <div>
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1 mb-2"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
+              >
+                Projekty
+              </h2>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: `${spacing * 0.7}px`,
+                }}
+              >
+                {projects.map((proj, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex justify-between items-baseline gap-2">
+                      <span
+                        className="font-bold"
+                        style={{ fontSize: `${fontSize * 0.9}px` }}
+                      >
+                        {proj.name}
+                        {proj.role && (
+                          <span
+                            className="font-normal opacity-70"
+                            style={{ fontSize: `${fontSize * 0.82}px` }}
+                          >
+                            {" "}
+                            — {proj.role}
+                          </span>
+                        )}
+                      </span>
+                      {proj.url && (
+                        <a
+                          href={
+                            proj.url.startsWith("http")
+                              ? proj.url
+                              : `https://${proj.url}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline shrink-0 text-right"
+                          style={{
+                            color: primaryColor,
+                            fontSize: `${fontSize * 0.82}px`,
+                          }}
+                        >
+                          {proj.url.replace(/^https?:\/\//, "")}
+                        </a>
+                      )}
+                    </div>
+                    {proj.technologies && (
+                      <div
+                        className="opacity-75 font-medium"
+                        style={{ fontSize: `${fontSize * 0.78}px` }}
+                      >
+                        Stack: <span>{proj.technologies}</span>
+                      </div>
+                    )}
+                    {proj.description && (
+                      <div
+                        className="opacity-90 prose prose-xs max-w-none [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:space-y-0.5"
+                        style={{ fontSize: `${fontSize * 0.85}px` }}
+                        dangerouslySetInnerHTML={{ __html: proj.description }}
                       />
                     )}
                   </div>
@@ -215,50 +344,53 @@ export function SidebarTemplate({
             </div>
           )}
 
-          {data.projects && data.projects.length > 0 && (
+          {education && education.length > 0 && (
             <div>
-              <h3
-                className="font-bold uppercase tracking-wider mb-3 pb-1 border-b border-current/15"
-                style={{ color: accent, fontSize: `${h3Size}px` }}
-              >
-                Projekty
-              </h3>
-              <ProjectsSection
-                projects={data.projects}
-                accent={accent}
-                subText={subText}
-                itemGap={itemGap}
-              />
-            </div>
-          )}
-
-          {data.education && data.education.length > 0 && (
-            <div>
-              <h3
-                className="font-bold uppercase tracking-wider mb-3 pb-1 border-b border-current/15"
-                style={{ color: accent, fontSize: `${h3Size}px` }}
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1 mb-2"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
               >
                 Edukacja
-              </h3>
-              <div className="flex flex-col" style={{ gap: `${itemGap}px` }}>
-                {data.education.map((edu, index) => (
-                  <div key={index} className="flex justify-between items-start">
-                    <div>
-                      <div className="font-bold leading-tight">
+              </h2>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: itemGap,
+                }}
+              >
+                {education.map((edu, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-start gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="font-bold leading-snug break-words"
+                        style={{ fontSize: `${fontSize * 0.9}px` }}
+                      >
                         {edu.school}
                       </div>
-                      <div
-                        className="opacity-70 mt-0.5"
-                        style={{ fontSize: `${subText}px` }}
-                      >
-                        {edu.degree}
-                      </div>
+                      {edu.degree && (
+                        <div
+                          className="opacity-75"
+                          style={{ fontSize: `${fontSize * 0.82}px` }}
+                        >
+                          {edu.degree}
+                        </div>
+                      )}
                     </div>
                     <div
-                      className="font-semibold whitespace-nowrap opacity-60 tabular-nums"
-                      style={{ fontSize: `${subText}px` }}
+                      className="opacity-60 font-medium shrink-0 text-right whitespace-nowrap"
+                      style={{ fontSize: `${fontSize * 0.82}px` }}
                     >
-                      {edu.startDate} {edu.endDate ? ` — ${edu.endDate}` : ""}
+                      {edu.startDate}{" "}
+                      {edu.startDate && (edu.endDate || "Obecnie") ? "—" : ""}{" "}
+                      {edu.endDate || (edu.startDate ? "Obecnie" : "")}
                     </div>
                   </div>
                 ))}
@@ -266,46 +398,79 @@ export function SidebarTemplate({
             </div>
           )}
 
-          {data.courses && data.courses.length > 0 && (
+          {courses && courses.length > 0 && (
             <div>
-              <h3
-                className="font-bold uppercase tracking-wider mb-2.5 pb-1 border-b border-current/15"
-                style={{ color: accent, fontSize: `${h3Size}px` }}
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1 mb-1.5"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
               >
                 Kursy i certyfikaty
-              </h3>
-              <div className="flex flex-col gap-1">
-                {data.courses.map((course, index) =>
-                  course.name ? (
-                    <div
-                      key={index}
-                      className="flex justify-between items-baseline"
-                      style={{ fontSize: `${subText}px` }}
-                    >
-                      <span className="font-medium opacity-90">
-                        {course.name}
+              </h2>
+              <div className="space-y-1">
+                {courses.map((course, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-baseline gap-2"
+                    style={{ fontSize: `${fontSize * 0.82}px` }}
+                  >
+                    <span className="font-medium leading-tight flex-1 break-words">
+                      {course.name}
+                    </span>
+                    {course.date && (
+                      <span className="opacity-60 shrink-0 text-right">
+                        {course.date}
                       </span>
-                      {course.date && (
-                        <span className="text-xs opacity-60 tabular-nums">
-                          {course.date}
-                        </span>
-                      )}
-                    </div>
-                  ) : null,
-                )}
+                    )}
+                  </div>
+                ))}
               </div>
+            </div>
+          )}
+
+          {/* ZAINTERESOWANIA W GŁÓWNEJ (PRAWEJ) KOLUMNIE */}
+          {interests && interests.length > 0 && (
+            <div>
+              <h2
+                className="font-bold uppercase tracking-wider border-b pb-1 mb-2"
+                style={{
+                  color: primaryColor,
+                  borderColor: `${primaryColor}30`,
+                  fontSize: `${fontSize * 0.95}px`,
+                }}
+              >
+                Zainteresowania
+              </h2>
+              <ul className="list-disc pl-4 space-y-1">
+                {interests.map((item, index) => (
+                  <li
+                    key={index}
+                    className="opacity-90 font-medium leading-snug"
+                    style={{ fontSize: `${fontSize * 0.85}px` }}
+                  >
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
 
-        {data.clause && (
-          <div
-            className="opacity-50 text-justify border-t border-current/15 pt-2 mt-4 leading-tight"
-            style={{ fontSize: `${tinyText}px` }}
-          >
-            {data.clause}
-          </div>
-        )}
+        {/* KLAUZULA RODO */}
+        <div
+          className="pt-4 border-t border-zinc-200 dark:border-zinc-800 opacity-60 leading-tight"
+          style={{ fontSize: `${fontSize * 0.68}px` }}
+        >
+          Wyrazam zgode na przetwarzanie moich danych osobowych dla potrzeb
+          niezbednych do realizacji procesu rekrutacji zgodnie z Rozporzadzeniem
+          Parlamentu Europejskiego i Rady (UE) 2016/679 z dnia 27 kwietnia 2016
+          r. w sprawie ochrony osob fizycznych w zwiazku z przetwarzaniem danych
+          osobowych i w sprawie swobodnego przeplywu takich danych oraz
+          uchylenia dyrektywy 95/46/WE (RODO).
+        </div>
       </div>
     </div>
   );

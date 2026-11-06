@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { Plus, Trash2, Sparkles, Loader2, Check } from "lucide-react";
+import { Plus, Trash2, GripVertical, Sparkles, Loader2 } from "lucide-react";
 import type { CVData } from "@/types/cv";
 import {
   FormControl,
@@ -12,162 +12,148 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { requestAiFeature } from "@/lib/ai-client";
 
-const MAX_SKILLS = 16;
-
 export function SkillsForm() {
-  const { control, getValues } = useFormContext<CVData>();
-  const { fields, append, remove } = useFieldArray({ control, name: "skills" });
+  const { control, watch } = useFormContext<CVData>();
+  const { fields, append, remove, move } = useFieldArray({
+    control,
+    name: "skills",
+  });
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{
-    text: string;
-    isError: boolean;
-  } | null>(null);
 
-  const handleGenerateSkills = async () => {
+  const handleSuggestSkills = async () => {
     setIsLoadingAi(true);
-    setStatusMessage(null);
-
-    const experience = getValues("experience") || [];
-    const projects = getValues("projects") || [];
-    const education = getValues("education") || [];
-    const currentSkills = getValues("skills") || [];
-
     try {
       const data = await requestAiFeature<{ skills: string[] }>(
         "/api/suggest-skills",
-        { experience, projects, education, currentSkills },
+        {
+          experience: watch("experience"),
+          projects: watch("projects"),
+          education: watch("education"),
+          currentSkills: watch("skills"),
+          targetRole: watch("personalInfo.jobTitle"),
+          language: "pl", // lub "en" jeśli dodasz przełącznik języka
+        },
       );
 
-      if (Array.isArray(data.skills) && data.skills.length > 0) {
-        const existingNames = new Set(
-          currentSkills
-            .map((s) => s.name?.trim().toLowerCase())
-            .filter(Boolean),
-        );
-
-        let addedCount = 0;
-        for (const skillName of data.skills) {
-          if (fields.length + addedCount >= MAX_SKILLS) break;
-          const clean = skillName.trim();
-          if (clean && !existingNames.has(clean.toLowerCase())) {
-            append({ name: clean });
-            existingNames.add(clean.toLowerCase());
-            addedCount++;
-          }
-        }
-
-        setStatusMessage({
-          text:
-            addedCount > 0
-              ? `Dodano ${addedCount} nowych umiejętności.`
-              : "Brak nowych umiejętności do dodania.",
-          isError: false,
+      if (data.skills && Array.isArray(data.skills)) {
+        data.skills.forEach((skillName) => {
+          append({ name: skillName });
         });
       }
     } catch (err: any) {
-      setStatusMessage({ text: err.message, isError: true });
+      alert(err.message || "Błąd generowania umiejętności.");
     } finally {
       setIsLoadingAi(false);
     }
   };
 
-  const isLimitReached = fields.length >= MAX_SKILLS;
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-6 flex flex-col gap-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-1">
-              Umiejętności
-            </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-              Wypisz technologie i kompetencje (max {MAX_SKILLS}, by zachować
-              układ 1 strony).
-            </p>
-          </div>
-          <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
-            {fields.length}/{MAX_SKILLS}
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-900 dark:text-zinc-50 mb-1">
+            Umiejętności
+          </h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+            Przeciągaj elementy, aby ustawić najważniejsze technologie na samej
+            górze.
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-2 self-start sm:self-auto">
           <Button
             type="button"
-            onClick={() => append({ name: "" })}
-            disabled={isLimitReached}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Dodaj umiejętność
-          </Button>
-
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleGenerateSkills}
-            disabled={isLoadingAi || isLimitReached}
-            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+            variant="outline"
+            size="sm"
+            disabled={isLoadingAi}
+            onClick={handleSuggestSkills}
+            className="text-xs text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
           >
             {isLoadingAi ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Dopasowywanie...
-              </>
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
             ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" />
-                Generuj z AI
-              </>
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             )}
+            Sugeruj z AI
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ name: "" })}
+          >
+            <Plus className="w-4 h-4 mr-1.5" /> Dodaj
           </Button>
         </div>
-
-        {statusMessage && (
-          <p
-            className={`text-xs sm:text-sm font-medium flex items-center gap-1.5 animate-in fade-in ${
-              statusMessage.isError
-                ? "text-red-500"
-                : "text-emerald-600 dark:text-emerald-400"
-            }`}
-          >
-            {!statusMessage.isError && <Check className="w-4 h-4" />}
-            {statusMessage.text}
-          </p>
-        )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="space-y-2.5">
         {fields.map((field, index) => (
-          <div key={field.id} className="relative">
+          <div
+            key={field.id}
+            draggable
+            onDragStart={(e) => {
+              setDraggedIndex(index);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (draggedIndex !== null && draggedIndex !== index) {
+                move(draggedIndex, index);
+              }
+              setDraggedIndex(null);
+            }}
+            onDragEnd={() => setDraggedIndex(null)}
+            className={`flex items-center gap-2 bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xs transition-all ${
+              draggedIndex === index
+                ? "opacity-40 border-indigo-500 ring-2 ring-indigo-500/20"
+                : ""
+            }`}
+          >
+            <div className="cursor-grab active:cursor-grabbing p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 shrink-0">
+              <GripVertical className="w-4 h-4" />
+            </div>
+
             <FormField
               control={control}
               name={`skills.${index}.name`}
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex-1 m-0 space-y-0">
                   <FormControl>
-                    <div className="flex gap-2">
-                      <Input placeholder="Np. React, TypeScript" {...field} />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Usuń umiejętność"
-                        className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
-                        onClick={() => remove(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Input
+                      placeholder="Np. React, TypeScript, Git, Problem Solving"
+                      className="h-9 text-sm border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+              onClick={() => remove(index)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
         ))}
 
         {fields.length === 0 && (
-          <div className="col-span-1 sm:col-span-2 text-center p-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-400">
-            Brak dodanych umiejętności.
+          <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-400 text-sm">
+            Brak umiejętności. Kliknij "Dodaj" lub użyj przycisku "Sugeruj z
+            AI".
           </div>
         )}
       </div>

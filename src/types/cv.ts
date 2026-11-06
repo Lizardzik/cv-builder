@@ -61,6 +61,9 @@ export const cvSchema = z.object({
   courses: z
     .array(z.object({ name: z.string().min(1, "Wpisz kurs"), date: z.string().optional() }))
     .optional(),
+  interests: z
+    .array(z.object({ name: z.string().min(1, "Wpisz zainteresowanie") }))
+    .optional(),
   clause: z.string().optional(),
   theme: z
     .object({

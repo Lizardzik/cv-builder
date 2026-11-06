@@ -1,13 +1,6 @@
 import { useRef, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import {
-  Type,
-  Palette,
-  LayoutTemplate,
-  MoveVertical,
-  TypeOutline,
-  Upload,
-} from "lucide-react";
+import { Type, Palette, MoveVertical, TypeOutline, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CVData } from "@/types/cv";
 
@@ -32,12 +25,11 @@ export function ThemeSettingsForm() {
   const {
     font: currentFont = "font-sans",
     customFont: customFontBase64,
-    color: currentColor = "#18181b",
+    color: currentColor = "#047857",
     textColor: currentTextColor = "#18181b",
     backgroundColor: currentBgColor = "#ffffff",
-    layout: currentLayout = "classic",
-    spacing: currentSpacing = 18,
-    fontSize: currentFontSize = 14,
+    spacing: currentSpacing = 16,
+    fontSize: currentFontSize = 13,
   } = theme;
 
   const fonts = [
@@ -47,14 +39,7 @@ export function ThemeSettingsForm() {
     { id: "font-custom", name: "Własna" },
   ];
 
-  const presetColors = ["#18181b", "#1d4ed8", "#047857", "#be123c"];
-
-  const layouts = [
-    { id: "classic", name: "Klasyczny" },
-    { id: "sidebar", name: "Pasek boczny" },
-    { id: "modern", name: "Nowoczesny" },
-    { id: "minimalist", name: "Minimalistyczny" },
-  ];
+  const presetColors = ["#047857", "#18181b", "#1d4ed8", "#be123c"];
 
   const handleCustomFont = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,36 +87,11 @@ export function ThemeSettingsForm() {
           Wygląd dokumentu
         </h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          Dostosuj układ, kolory i typografię podglądu PDF.
+          Dostosuj kolory, czcionkę i parametry podglądu PDF.
         </p>
       </div>
 
       <div className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
-            <LayoutTemplate className="w-4 h-4" /> Układ strony
-          </h3>
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-            {layouts.map((layout) => (
-              <Button
-                key={layout.id}
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setValue("theme.layout", layout.id, { shouldDirty: true })
-                }
-                className={
-                  currentLayout === layout.id
-                    ? "ring-2 ring-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 font-medium"
-                    : ""
-                }
-              >
-                {layout.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium flex items-center gap-2">
@@ -170,7 +130,6 @@ export function ThemeSettingsForm() {
           </div>
         </div>
 
-        {/* Kolory dokumentu */}
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium flex items-center gap-2 mb-3">

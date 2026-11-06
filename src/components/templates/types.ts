@@ -9,7 +9,11 @@ export interface TemplateDimensions {
   tinyText: number;
   sectionGap: number;
   itemGap: number;
-  age: number | null;
+}
+
+export interface Course {
+  name: string;
+  date?: string;
 }
 
 export interface TemplateColors {

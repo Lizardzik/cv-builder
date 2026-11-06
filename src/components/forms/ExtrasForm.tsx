@@ -22,37 +22,44 @@ const LANGUAGE_LEVELS = [
 
 export function ExtrasForm() {
   const { control } = useFormContext<CVData>();
+
   const {
     fields: langFields,
     append: appendLang,
     remove: removeLang,
   } = useFieldArray({ control, name: "languages" });
+
   const {
     fields: courseFields,
     append: appendCourse,
     remove: removeCourse,
   } = useFieldArray({ control, name: "courses" });
 
+  const {
+    fields: interestFields,
+    append: appendInterest,
+    remove: removeInterest,
+  } = useFieldArray({ control, name: "interests" });
+
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* JĘZYKI OBCE */}
       <div>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold mb-1">Języki obce</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Wybierz język i standardowy poziom biegłości.
-            </p>
+            <h2 className="text-xl font-semibold">Języki obce</h2>
           </div>
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => appendLang({ name: "", level: "B2" })}
           >
-            <Plus className="w-4 h-4 mr-2" /> Dodaj język
+            <Plus className="w-4 h-4 mr-1.5" /> Dodaj język
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {langFields.map((field, index) => (
             <div key={field.id} className="flex gap-2 items-center">
               <FormField
@@ -63,7 +70,7 @@ export function ExtrasForm() {
                     <FormControl>
                       <Input
                         placeholder="Np. Angielski"
-                        className="h-10"
+                        className="h-9 text-sm"
                         {...field}
                       />
                     </FormControl>
@@ -80,7 +87,7 @@ export function ExtrasForm() {
                     <FormControl>
                       <select
                         {...field}
-                        className="w-full h-10 px-3 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm font-medium focus:ring-2 focus:ring-indigo-600 focus:outline-none"
+                        className="w-full h-9 px-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-medium focus:ring-2 focus:ring-indigo-600 focus:outline-none"
                       >
                         {LANGUAGE_LEVELS.map((lvl) => (
                           <option key={lvl.value} value={lvl.value}>
@@ -98,41 +105,35 @@ export function ExtrasForm() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Usuń język"
-                className="h-10 w-10 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                 onClick={() => removeLang(index)}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}
-
-          {langFields.length === 0 && (
-            <div className="col-span-1 sm:col-span-2 text-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-400 text-sm">
-              Brak dodanych języków.
-            </div>
-          )}
         </div>
       </div>
 
+      {/* KURSY I CERTYFIKATY */}
       <div>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold mb-1">Kursy i certyfikaty</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Pochwal się dodatkowymi kwalifikacjami.
-            </p>
+            <h2 className="text-xl font-semibold">
+              Certyfikaty i kwalifikacje
+            </h2>
           </div>
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={() => appendCourse({ name: "", date: "" })}
           >
-            <Plus className="w-4 h-4 mr-2" /> Dodaj kurs
+            <Plus className="w-4 h-4 mr-1.5" /> Dodaj
           </Button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {courseFields.map((field, index) => (
             <div key={field.id} className="flex gap-2 items-center">
               <FormField
@@ -142,8 +143,8 @@ export function ExtrasForm() {
                   <FormItem className="flex-1">
                     <FormControl>
                       <Input
-                        placeholder="Np. AWS Certified Solutions Architect"
-                        className="h-10"
+                        placeholder="Np. INF.04 Projektowanie i programowanie aplikacji"
+                        className="h-9 text-sm"
                         {...field}
                       />
                     </FormControl>
@@ -155,11 +156,11 @@ export function ExtrasForm() {
                 control={control}
                 name={`courses.${index}.date`}
                 render={({ field }) => (
-                  <FormItem className="w-32 shrink-0">
+                  <FormItem className="w-28 shrink-0">
                     <FormControl>
                       <Input
                         placeholder="Rok / Data"
-                        className="h-10"
+                        className="h-9 text-sm"
                         {...field}
                       />
                     </FormControl>
@@ -171,20 +172,62 @@ export function ExtrasForm() {
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Usuń kurs"
-                className="h-10 w-10 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                 onClick={() => removeCourse(index)}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}
+        </div>
+      </div>
 
-          {courseFields.length === 0 && (
-            <div className="text-center p-6 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-400 text-sm">
-              Brak dodanych kursów.
+      {/* ZAINTERESOWANIA / HOBBY */}
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Zainteresowania / Pasje</h2>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => appendInterest({ name: "" })}
+          >
+            <Plus className="w-4 h-4 mr-1.5" /> Dodaj pasję
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {interestFields.map((field, index) => (
+            <div key={field.id} className="flex gap-2 items-center">
+              <FormField
+                control={control}
+                name={`interests.${index}.name`}
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input
+                        placeholder="Np. Nowinki technologiczne i sprzęt GSM"
+                        className="h-9 text-sm"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                onClick={() => removeInterest(index)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </div>
